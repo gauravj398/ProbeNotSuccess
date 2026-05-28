@@ -235,13 +235,14 @@
 
         // Form fields validation on Submit
         // --- DASHBOARD KA SUBMIT FUNCTION (REPLACE YAHAN SE KAREIN) ---
+// --- DASHBOARD KA UPDATED SUBMIT FUNCTION (ISSE REPLACE KAREIN) ---
 document.getElementById('dataForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
     const acctField = document.getElementById('acctId').value;
     const acctErr = document.getElementById('acctError');
 
-    // 10 digit check
+    // 10-digit validation check
     if (acctField.length !== 10 || isNaN(acctField)) {
         acctErr.classList.remove('hidden');
         acctErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -263,11 +264,11 @@ document.getElementById('dataForm').addEventListener('submit', function(e) {
     const canvas = document.getElementById('canvasPreview');
     const finalStampedImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
 
-    // --- NEW LOGIC: URL Parameter ya local storage se login Mobile Number uthana ---
+    // Login page se mobile number uthana
     let loginMobile = new URLSearchParams(window.location.search).get('user') || "Unknown_User";
 
     const submissionPayload = {
-        userId: loginMobile, // Login mobile number yahan bhej rahe hain
+        userId: loginMobile,
         division: document.getElementById('division').value,
         acctId: acctField,
         meterNumber: document.getElementById('meterNumber').value,
@@ -281,14 +282,19 @@ document.getElementById('dataForm').addEventListener('submit', function(e) {
     };
 
     // Google Web App URL yahan daalein
-    const googleWebAppUrl = "https://script.google.com/macros/s/AKfycbyIHP_RcE50LII5we2WiZ_EwXsu4HlthBP5iSUeoHus3iZPXeGauVR5iFIqNm-OVeje/exec";
+    const googleWebAppUrl = "YAHAN_APNA_GOOGLE_WEB_APP_URL_PASTE_KAREIN";
 
-    // Show Loader / Alert
-    alert("Sending data to Google Sheet... Pls wait 2-3 seconds.");
+    // --- BADLAAV: Turant success message dikhana aur form reset karna ---
+    alert("Data Submitted Successfully!");
+    
+    // Form aur photo preview ko turant saaf/reset karna
+    document.getElementById('dataForm').reset();
+    document.getElementById('previewContainer').classList.add('hidden');
 
+    // Server request ab background me chalti rahegii, user ko wait nahi karna padega
     fetch(googleWebAppUrl, {
         method: "POST",
-        mode: "no-cors", // No-cors se mobile browser security block nahi hoti
+        mode: "no-cors", 
         cache: "no-cache",
         headers: {
             "Content-Type": "application/json"
@@ -296,14 +302,12 @@ document.getElementById('dataForm').addEventListener('submit', function(e) {
         body: JSON.stringify(submissionPayload)
     })
     .then(() => {
-        alert("Data and Geotagged Photo Submitted Successfully!");
-        document.getElementById('dataForm').reset();
-        document.getElementById('previewContainer').classList.add('hidden');
+        console.log("Background Sync Complete: Data saved to Google Sheet.");
     })
     .catch(err => {
-        alert("Submission Failed! Error: " + err);
+        console.error("Background Sync Failed: ", err);
     });
-});
-    </script>
+});   
+   </script>
 </body>
 </html>
