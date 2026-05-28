@@ -82,7 +82,7 @@
                 document.getElementById('errorMessage').classList.add('hidden');
                 
                 // Redirecting to form dashboard page
-                window.location.href = "dashboard.html";
+                window.location.href = "dashboard.html?user=" + encodeURIComponent(user);
             } else {
                 const errDiv = document.getElementById('errorMessage');
                 errDiv.classList.remove('hidden');
