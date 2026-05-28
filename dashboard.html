@@ -234,49 +234,76 @@
         });
 
         // Form fields validation on Submit
-        document.getElementById('dataForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const acctField = document.getElementById('acctId').value;
-            const acctErr = document.getElementById('acctError');
+        // --- DASHBOARD KA SUBMIT FUNCTION (REPLACE YAHAN SE KAREIN) ---
+document.getElementById('dataForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const acctField = document.getElementById('acctId').value;
+    const acctErr = document.getElementById('acctError');
 
-            if (acctField.length !== 10 || isNaN(acctField)) {
-                acctErr.classList.remove('hidden');
-                acctErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-            } else {
-                acctErr.classList.add('hidden');
-            }
+    // 10 digit check
+    if (acctField.length !== 10 || isNaN(acctField)) {
+        acctErr.classList.remove('hidden');
+        acctErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    } else {
+        acctErr.classList.add('hidden');
+    }
 
-            if(!currentLat || !currentLng) {
-                alert("GPS Coordinates are not ready yet. Please ensure device Location is ON and refresh.");
-                return;
-            }
+    if(!currentLat || !currentLng) {
+        alert("GPS Coordinates are not ready yet. Please ensure device Location is ON and refresh.");
+        return;
+    }
 
-            if(document.getElementById('previewContainer').classList.contains('hidden')) {
-                alert("Photo Capture is compulsory. Please snap a picture of the Meter.");
-                return;
-            }
+    if(document.getElementById('previewContainer').classList.contains('hidden')) {
+        alert("Photo Capture is compulsory. Please snap a picture of the Meter.");
+        return;
+    }
 
-            const canvas = document.getElementById('canvasPreview');
-            const finalStampedImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+    const canvas = document.getElementById('canvasPreview');
+    const finalStampedImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
 
-            const submissionPayload = {
-                division: document.getElementById('division').value,
-                acctId: acctField,
-                meterNumber: document.getElementById('meterNumber').value,
-                meterMake: document.getElementById('meterMake').value,
-                meterMfDate: document.getElementById('meterMfDate').value,
-                latitude: currentLat,
-                longitude: currentLng,
-                remarks: document.getElementById('remarks').value,
-                otherRemarks: document.getElementById('otherRemarks').value,
-                photoBase64: finalStampedImageBase64
-            };
+    // --- NEW LOGIC: URL Parameter ya local storage se login Mobile Number uthana ---
+    let loginMobile = new URLSearchParams(window.location.search).get('user') || "Unknown_User";
 
-            alert("Data validated! Ready to send to Google Sheet backend.");
-            console.log("Submission Object Payload:", submissionPayload);
-        });
+    const submissionPayload = {
+        userId: loginMobile, // Login mobile number yahan bhej rahe hain
+        division: document.getElementById('division').value,
+        acctId: acctField,
+        meterNumber: document.getElementById('meterNumber').value,
+        meterMake: document.getElementById('meterMake').value,
+        meterMfDate: document.getElementById('meterMfDate').value,
+        latitude: currentLat,
+        longitude: currentLng,
+        remarks: document.getElementById('remarks').value,
+        otherRemarks: document.getElementById('otherRemarks').value,
+        photoBase64: finalStampedImageBase64
+    };
+
+    // Google Web App URL yahan daalein
+    const googleWebAppUrl = "https://script.google.com/macros/s/AKfycbyIHP_RcE50LII5we2WiZ_EwXsu4HlthBP5iSUeoHus3iZPXeGauVR5iFIqNm-OVeje/exec";
+
+    // Show Loader / Alert
+    alert("Sending data to Google Sheet... Pls wait 2-3 seconds.");
+
+    fetch(googleWebAppUrl, {
+        method: "POST",
+        mode: "no-cors", // No-cors se mobile browser security block nahi hoti
+        cache: "no-cache",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(submissionPayload)
+    })
+    .then(() => {
+        alert("Data and Geotagged Photo Submitted Successfully!");
+        document.getElementById('dataForm').reset();
+        document.getElementById('previewContainer').classList.add('hidden');
+    })
+    .catch(err => {
+        alert("Submission Failed! Error: " + err);
+    });
+});
     </script>
 </body>
 </html>
