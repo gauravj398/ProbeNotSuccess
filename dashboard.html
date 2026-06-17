@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Entry - Probe Not Success Data</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f3f4f6; }
+        .header-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23374151' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 30px;
+        }
+        .gps-pulse { animation: pulse 1.8s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen font-sans relative" onclick="closeMenuOutside(event)">
+
+    <header class="header-gradient text-white p-4 shadow-xl sticky top-0 z-50 flex justify-between items-center px-4 md:px-8">
+        <div class="flex flex-col">
+            <h1 class="text-base md:text-xl font-extrabold tracking-wide drop-shadow-sm">Probe Not Success Data</h1>
+            <p id="userGreeting" class="text-[11px] font-bold text-blue-100 italic tracking-wider mt-0.5">Welcome: Loading profile...</p>
+        </div>
+        <div class="flex items-center gap-2 relative">
+            <a href="index.html" class="bg-red-500 hover:bg-red-600 text-white font-bold text-xs px-3 py-2 rounded-xl shadow-md transition transform active:scale-95 uppercase tracking-wider flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Logout
+            </a>
+            <button type="button" onclick="toggleMenu(event)" class="hover:bg-white/10 p-2 rounded-xl transition text-white focus:outline-none" aria-label="Options Menu">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+            </button>
+            <div id="dotMenu" class="absolute right-0 top-12 bg-white text-gray-800 rounded-2xl shadow-2xl border border-gray-100 p-2 w-52 hidden z-50">
+                <button type="button" onclick="manualGPSTrigger()" class="w-full text-left px-4 py-3 text-xs font-bold text-blue-700 hover:bg-blue-50 rounded-xl transition flex items-center gap-2">🛰️ Refresh GPS Location</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-lg w-full mx-auto p-4">
+        <form id="dataForm" class="bg-white p-5 rounded-2xl shadow-xl border border-gray-100 space-y-4">
+            <div class="flex justify-between items-center border-b pb-2 mb-2">
+                <h2 class="text-lg font-black text-blue-900 uppercase tracking-tight">Survey Data Entry</h2>
+                <span class="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">* Required</span>
+            </div>
+
+            <!-- Division -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Division Name *</label>
+                <select id="division" required class="w-full px-3 py-2.5 rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none">
+                    <option value="">-- Select Division --</option>
+                    <option value="EDD FIROZABAD">EDD FIROZABAD</option>
+                    <option value="EDD JASRANA">EDD JASRANA</option>
+                    <option value="EDD SHIKOHABAD">EDD SHIKOHABAD</option>
+                    <option value="EDD SIRSAGANJ">EDD SIRSAGANJ</option>
+                    <option value="EDD TUNDLA">EDD TUNDLA</option>
+                </select>
+            </div>
+
+            <!-- ACCT ID -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">ACCT ID *</label>
+                <input type="text" id="acctId" required inputmode="numeric" maxlength="10" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none" placeholder="Enter 10 digit Account ID">
+                <p id="acctError" class="text-red-600 text-xs font-semibold mt-1 hidden">Please enter valid 10-digit Account Number</p>
+            </div>
+
+            <!-- Meter Number -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Meter Number *</label>
+                <input type="text" id="meterNumber" required class="w-full px-3 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none" placeholder="Enter Meter Number">
+            </div>
+
+            <!-- Meter Make - Proper Dropdown -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Meter Make *</label>
+                <select id="meterMake" required class="w-full px-3 py-2.5 rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none">
+                    <option value="">-- Select Meter Make --</option>
+                    <option value="AEW">AEW</option>
+                    <option value="ALIED">ALIED</option>
+                    <option value="AMTL">AMTL</option>
+                    <option value="AVON">AVON</option>
+                    <option value="BENTECK">BENTECK</option>
+                    <option value="CAPITAL">CAPITAL</option>
+                    <option value="ELYMER">ELYMER</option>
+                    <option value="EPPELTON">EPPELTON</option>
+                    <option value="FLASH">FLASH</option>
+                    <option value="GENUS">GENUS</option>
+                    <option value="HPL">HPL</option>
+                    <option value="INDOTECH">INDOTECH</option>
+                    <option value="LAN">LAN</option>
+                    <option value="LINKWELL">LINKWELL</option>
+                    <option value="LNG">LNG</option>
+                    <option value="LNT">LNT</option>
+                    <option value="MT">MT</option>
+                    <option value="POWERTECH">POWERTECH</option>
+                    <option value="SECURE">SECURE</option>
+                    <option value="VISONECK">VISONECK</option>
+                </select>
+            </div>
+
+            <!-- Meter M/F Date - MM/YYYY via two dropdowns -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Meter M/F Date * <span class="text-gray-400 font-normal">(MM/YYYY)</span></label>
+                <div class="flex gap-2 items-center">
+                    <select id="mfMonth" required class="flex-1 px-3 py-2.5 rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none text-center font-mono font-bold">
+                        <option value="">MM</option>
+                        <option value="01">01</option>
+                        <option value="02">02</option>
+                        <option value="03">03</option>
+                        <option value="04">04</option>
+                        <option value="05">05</option>
+                        <option value="06">06</option>
+                        <option value="07">07</option>
+                        <option value="08">08</option>
+                        <option value="09">09</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                    </select>
+                    <span class="text-gray-400 font-black text-xl select-none">/</span>
+                    <select id="mfYear" required class="flex-1 px-3 py-2.5 rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none text-center font-mono font-bold">
+                        <option value="">YYYY</option>
+                    </select>
+                </div>
+                <p id="dateError" class="text-red-600 text-xs font-semibold mt-1 hidden">Please select both Month and Year</p>
+            </div>
+
+            <!-- GPS Display -->
+            <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase">Latitude</label>
+                    <input type="text" id="formLat" readonly placeholder="Waiting GPS..." class="w-full bg-transparent text-xs font-mono text-slate-700 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase">Longitude</label>
+                    <input type="text" id="formLng" readonly placeholder="Waiting GPS..." class="w-full bg-transparent text-xs font-mono text-slate-700 outline-none">
+                </div>
+                <div class="col-span-2 flex items-center gap-2">
+                    <span id="gpsStatus" class="w-2 h-2 rounded-full bg-amber-400 gps-pulse inline-block flex-shrink-0"></span>
+                    <span id="gpsAccuracy" class="text-[10px] font-bold text-slate-500">GPS: Acquiring signal...</span>
+                </div>
+            </div>
+
+            <!-- Camera Capture -->
+            <div class="border-2 border-dashed border-blue-200 p-4 rounded-2xl text-center bg-blue-50/40">
+                <label class="block text-xs font-bold text-blue-900 uppercase mb-2">Meter Photo Capture *</label>
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden">
+                <button type="button" onclick="document.getElementById('cameraInput').click()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow inline-flex items-center gap-2 uppercase tracking-wider transition transform active:scale-95">
+                    📸 Open Camera
+                </button>
+                <div class="relative mt-3 hidden" id="previewContainer">
+                    <p class="text-[11px] text-emerald-700 font-bold mb-1 flex items-center justify-center gap-1">✨ Photo Captured with GPS Map Stamp!</p>
+                    <canvas id="canvasPreview" class="w-full rounded-xl shadow-md border border-emerald-200 bg-black"></canvas>
+                </div>
+            </div>
+
+            <!-- Remarks -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Remarks *</label>
+                <select id="remarks" required class="w-full px-3 py-2.5 rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none">
+                    <option value="">-- Select Status Remarks --</option>
+                    <option value="Meter Box Improper">Meter Box Improper</option>
+                    <option value="Meter Port Dirty/Fungas">Meter Port Dirty/Fungas</option>
+                    <option value="Meter On Hieght">Meter On Hieght</option>
+                    <option value="Meter Defective">Meter Defective</option>
+                    <option value="Meter OK">Meter OK</option>
+                    <option value="ERROR">ERROR</option>
+                </select>
+            </div>
+
+            <!-- Other Remarks -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Other Remarks <span class="text-gray-400 font-normal">(Optional)</span></label>
+                <textarea id="otherRemarks" rows="2" class="w-full px-3 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none" placeholder="Any additional details..."></textarea>
+            </div>
+
+            <!-- Screenshot -->
+            <div class="border-2 border-dashed border-indigo-200 p-4 rounded-2xl text-center bg-indigo-50/40">
+                <label class="block text-xs font-bold text-indigo-900 uppercase mb-2">Upload Screenshot <span class="text-gray-400 font-normal">(Optional)</span></label>
+                <input type="file" id="screenshotInput" accept="image/*" class="hidden">
+                <button type="button" onclick="document.getElementById('screenshotInput').click()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow inline-flex items-center gap-2 uppercase tracking-wider transition transform active:scale-95">
+                    🖼️ Open Gallery / Files
+                </button>
+                <div class="relative mt-3 hidden" id="screenshotPreviewContainer">
+                    <p class="text-[11px] text-indigo-700 font-bold mb-1">✓ Screenshot Loaded</p>
+                    <img id="screenshotPreview" class="w-full max-h-64 object-contain rounded-xl shadow-md border border-indigo-200 bg-white" alt="Screenshot Preview">
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="w-full bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-blue-200 transition transform active:scale-95 text-sm uppercase tracking-widest">
+                Submit Entry Data
+            </button>
+        </form>
+    </main>
+
+    <footer class="w-full text-center py-3.5 header-gradient text-white font-bold text-xs tracking-wider mt-6 shadow-inner">Gaurav Jain @ 2026</footer>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl border border-emerald-100">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <h3 class="text-xl font-black text-gray-800 mb-2 uppercase tracking-wide">Submitted!</h3>
+            <p class="text-sm text-gray-500 font-medium mb-6">Data Submitted Successfully</p>
+            <button type="button" onclick="closePopupModal()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md uppercase tracking-wider text-xs transition transform active:scale-95">OK</button>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl p-6 max-w-xs w-full text-center shadow-2xl">
+            <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-sm font-bold text-gray-700" id="loadingText">Processing...</p>
+        </div>
+    </div>
+
+    <script>
+        /* ===== GLOBAL STATE ===== */
+        let currentLat = "";
+        let currentLng = "";
+        let gpsAccuracy = 0;
+        let addressData = { village: "N/A", city: "N/A", district: "N/A", state: "N/A" };
+        let originalCapturedImage = null;
+        let mapTileCanvas = null;
+        let uploadedScreenshotBase64 = "";
+        let watchId = null;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const loginMobile = urlParams.get('user') || "Unknown_User";
+        const loginName = urlParams.get('name') || "Field Executive";
+
+        /* ===== INIT ===== */
+        window.addEventListener('load', () => {
+            document.getElementById('userGreeting').innerText = `Welcome: ${loginName} (${loginMobile})`;
+            populateYearDropdown();
+            startGPSWatch();
+        });
+
+        /* ===== POPULATE YEAR DROPDOWN (1990 to Current Year) ===== */
+        function populateYearDropdown() {
+            const sel = document.getElementById('mfYear');
+            const cy = new Date().getFullYear();
+            for (let y = cy; y >= 1990; y--) {
+                const o = document.createElement('option');
+                o.value = String(y);
+                o.textContent = String(y);
+                sel.appendChild(o);
+            }
+        }
+
+        /* ===== 3-DOT MENU ===== */
+        function toggleMenu(e) {
+            e.stopPropagation();
+            document.getElementById('dotMenu').classList.toggle('hidden');
+        }
+        function closeMenuOutside() {
+            document.getElementById('dotMenu').classList.add('hidden');
+        }
+
+        /* ===== GPS: watchPosition for best accuracy ===== */
+        function manualGPSTrigger() {
+            document.getElementById('dotMenu').classList.add('hidden');
+            document.getElementById('gpsStatus').className = 'w-2 h-2 rounded-full bg-amber-400 gps-pulse inline-block flex-shrink-0';
+            document.getElementById('gpsAccuracy').textContent = 'GPS: Refreshing...';
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+            startGPSWatch();
+        }
+
+        function startGPSWatch() {
+            if (!navigator.geolocation) {
+                document.getElementById('gpsAccuracy').textContent = 'GPS: Not supported by this browser';
+                return;
+            }
+            document.getElementById('gpsAccuracy').textContent = 'GPS: Acquiring best signal...';
+            watchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    currentLat = pos.coords.latitude.toFixed(6);
+                    currentLng = pos.coords.longitude.toFixed(6);
+                    gpsAccuracy = Math.round(pos.coords.accuracy);
+
+                    document.getElementById('formLat').value = currentLat;
+                    document.getElementById('formLng').value = currentLng;
+                    document.getElementById('gpsAccuracy').textContent = `GPS: ±${gpsAccuracy}m accuracy`;
+
+                    /* Color-coded accuracy indicator */
+                    if (gpsAccuracy <= 15) {
+                        document.getElementById('gpsStatus').className = 'w-2 h-2 rounded-full bg-emerald-500 inline-block flex-shrink-0';
+                    } else if (gpsAccuracy <= 50) {
+                        document.getElementById('gpsStatus').className = 'w-2 h-2 rounded-full bg-yellow-400 inline-block flex-shrink-0';
+                    } else {
+                        document.getElementById('gpsStatus').className = 'w-2 h-2 rounded-full bg-amber-400 gps-pulse inline-block flex-shrink-0';
+                    }
+
+                    /* Auto-stop when highly accurate */
+                    if (gpsAccuracy <= 8 && watchId) {
+                        navigator.geolocation.clearWatch(watchId);
+                        watchId = null;
+                    }
+
+                    fetchReverseAddress(currentLat, currentLng);
+                },
+                (err) => {
+                    document.getElementById('gpsStatus').className = 'w-2 h-2 rounded-full bg-red-500 inline-block flex-shrink-0';
+                    document.getElementById('gpsAccuracy').textContent = 'GPS Error: ' + err.message;
+                },
+                { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 }
+            );
+        }
+
+        /* ===== REVERSE GEOCODE ===== */
+        function fetchReverseAddress(lat, lng) {
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`)
+                .then(r => r.json())
+                .then(d => {
+                    if (d && d.address) {
+                        const a = d.address;
+                        addressData.village = a.village || a.suburb || a.neighbourhood || a.hamlet || a.locality || "N/A";
+                        addressData.city = a.city || a.town || a.municipality || "N/A";
+                        addressData.district = a.state_district || a.county || "N/A";
+                        addressData.state = a.state || "N/A";
+                    }
+                })
+                .catch(() => {});
+        }
+
+        /* ===== MAP TILE LOADING (2x2 grid, Zoom 17) ===== */
+        function latLngToTile(lat, lng, zoom) {
+            const n = Math.pow(2, zoom);
+            const x = Math.floor((lng + 180) / 360 * n);
+            const latRad = lat * Math.PI / 180;
+            const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
+            return { x, y };
+        }
+
+        function loadMapTiles(lat, lng) {
+            return new Promise((resolve) => {
+                if (!lat || !lng) { resolve(null); return; }
+                const zoom = 17, ts = 256, g = 2;
+                const offC = document.createElement('canvas');
+                offC.width = ts * g;
+                offC.height = ts * g;
+                const offX = offC.getContext('2d');
+                const c = latLngToTile(parseFloat(lat), parseFloat(lng), zoom);
+                const sx = c.x - 1, sy = c.y - 1;
+                let loaded = 0, failed = false;
+
+                for (let dy = 0; dy < g; dy++) {
+                    for (let dx = 0; dx < g; dx++) {
+                        const img = new Image();
+                        img.crossOrigin = "anonymous";
+                        img.onload = () => {
+                            offX.drawImage(img, dx * ts, dy * ts, ts, ts);
+                            loaded++;
+                            if (loaded === 4) resolve(offC);
+                        };
+                        img.onerror = () => {
+                            failed = true;
+                            loaded++;
+                            if (loaded === 4) resolve(null);
+                        };
+                        img.src = `https://tile.openstreetmap.org/${zoom}/${sx + dx}/${sy + dy}.png`;
+                    }
+                }
+                setTimeout(() => { if (loaded < 4) resolve(null); }, 7000);
+            });
+        }
+
+        /* ===== CANVAS ROUND-RECT HELPER (cross-browser) ===== */
+        function drawRoundRect(ctx, x, y, w, h, r) {
+            r = Math.min(r, w / 2, h / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
+
+        /* ===== STAMP DRAWING - Screenshot Style with Map ===== */
+        function drawStampOnCanvas(canvas, img, tileCanvas, opts) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+
+            const W = canvas.width;
+            const pad = Math.max(14, Math.floor(W * 0.022));
+            const fs = Math.max(20, Math.floor(W * 0.024));
+            const fsSmall = Math.floor(fs * 0.85);
+            const lh = Math.floor(fs * 1.5);
+
+            /* Time formatting */
+            const now = new Date();
+            const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+            const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            let hr = now.getHours(), mn = now.getMinutes(), sc = now.getSeconds();
+            const ap = hr >= 12 ? 'PM' : 'AM';
+            hr = hr % 12 || 12;
+            mn = mn < 10 ? '0' + mn : mn;
+            sc = sc < 10 ? '0' + sc : sc;
+            const timeStr = `${hr}:${mn}:${sc} ${ap}`;
+
+            /* Map thumbnail size */
+            const mapH = lh * 3;
+            const mapW = mapH;
+
+            /* Total stamp height calculation */
+            const stampH = pad + mapH + pad * 0.6 + lh * 4 + pad;
+            const stampY = canvas.height - stampH;
+
+            /* Dark background */
+            ctx.fillStyle = "rgba(0, 0, 0, 0.80)";
+            ctx.fillRect(0, stampY, W, stampH);
+
+            /* Top accent bar */
+            const grad = ctx.createLinearGradient(0, stampY, W, stampY);
+            grad.addColorStop(0, '#3b82f6');
+            grad.addColorStop(0.5, '#06b6d4');
+            grad.addColorStop(1, '#3b82f6');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, stampY, W, Math.max(3, Math.floor(W * 0.004)));
+
+            let cy = stampY + pad;
+
+            /* ===== ROW 1: Map Thumbnail (left) + City, State (right) ===== */
+            const mx = pad, my = cy;
+
+            if (tileCanvas) {
+                ctx.save();
+                drawRoundRect(ctx, mx, my, mapW, mapH, 8);
+                ctx.clip();
+                ctx.drawImage(tileCanvas, mx, my, mapW, mapH);
+                ctx.restore();
+
+                /* Border */
+                ctx.strokeStyle = '#60a5fa';
+                ctx.lineWidth = Math.max(2, Math.floor(W * 0.0025));
+                drawRoundRect(ctx, mx, my, mapW, mapH, 8);
+                ctx.stroke();
+
+                /* Center pin - outer red circle */
+                const pr = Math.max(5, Math.floor(mapW * 0.055));
+                ctx.beginPath();
+                ctx.arc(mx + mapW / 2, my + mapH / 2, pr, 0, Math.PI * 2);
+                ctx.fillStyle = '#ef4444';
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = Math.max(1.5, pr * 0.3);
+                ctx.stroke();
+
+                /* Pin inner white dot */
+                ctx.beginPath();
+                ctx.arc(mx + mapW / 2, my + mapH / 2, pr * 0.3, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+            } else {
+                /* Fallback placeholder */
+                ctx.fillStyle = '#1e293b';
+                drawRoundRect(ctx, mx, my, mapW, mapH, 8);
+                ctx.fill();
+                ctx.strokeStyle = '#475569';
+                ctx.lineWidth = 2;
+                drawRoundRect(ctx, mx, my, mapW, mapH, 8);
+                ctx.stroke();
+
+                ctx.font = `${Math.floor(mapH * 0.4)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#64748b';
+                ctx.fillText('\uD83D\uDCCD', mx + mapW / 2, my + mapH / 2);
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+            }
+
+            /* City & State text beside map */
+            const txStart = mx + mapW + pad;
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${fs}px Arial`;
+            ctx.textBaseline = 'top';
+            ctx.fillText(`City: ${opts.city || 'N/A'}, State: ${opts.state || 'N/A'}`, txStart, cy + fs * 0.4);
+
+            cy += mapH + pad * 0.6;
+
+            /* Thin separator */
+            ctx.fillStyle = 'rgba(255,255,255,0.12)';
+            ctx.fillRect(pad, cy - pad * 0.2, W - pad * 2, 1);
+
+            /* ===== ROW 2: Full Address ===== */
+            ctx.font = `${fsSmall}px Arial`;
+            ctx.fillStyle = '#d1d5db';
+            const addrText = `Village: ${opts.village || 'N/A'}, City: ${opts.city || 'N/A'}, Distt: ${opts.district || 'N/A'}, State: ${opts.state || 'N/A'}`;
+            ctx.fillText(addrText, pad, cy);
+            cy += lh;
+
+            /* ===== ROW 3: Lat / Long ===== */
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `${fsSmall}px Arial`;
+            ctx.fillText(`Lat: ${opts.lat || 'N/A'} | Long: ${opts.lng || 'N/A'}`, pad, cy);
+            cy += lh;
+
+            /* ===== ROW 4: Day, Date, Time ===== */
+            ctx.fillText(`${dayName}, ${dateStr} | ${timeStr}`, pad, cy);
+            cy += lh;
+
+            /* ===== ROW 5: Division + Acct ID in YELLOW ===== */
+            ctx.fillStyle = '#FFD700';
+            ctx.font = `bold ${fs}px Arial`;
+            ctx.fillText(`Division: ${opts.division || 'N/A'} | Acct: ${opts.acctId || 'N/A'}`, pad, cy);
+        }
+
+        /* ===== CAMERA CAPTURE HANDLER ===== */
+        document.getElementById('cameraInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            showLoading('Loading photo & map tiles...');
+
+            const reader = new FileReader();
+            reader.onload = async function(ev) {
+                const img = new Image();
+                img.onload = async function() {
+                    originalCapturedImage = img;
+
+                    /* Load map tiles */
+                    const tiles = await loadMapTiles(currentLat, currentLng);
+                    mapTileCanvas = tiles;
+
+                    /* Draw preview stamp with current form values */
+                    const canvas = document.getElementById('canvasPreview');
+                    drawStampOnCanvas(canvas, img, mapTileCanvas, {
+                        village: addressData.village,
+                        city: addressData.city,
+                        district: addressData.district,
+                        state: addressData.state,
+                        lat: currentLat,
+                        lng: currentLng,
+                        division: document.getElementById('division').value,
+                        acctId: document.getElementById('acctId').value
+                    });
+
+                    document.getElementById('previewContainer').classList.remove('hidden');
+                    hideLoading();
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        /* ===== SCREENSHOT HANDLER ===== */
+        document.getElementById('screenshotInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                uploadedScreenshotBase64 = ev.target.result;
+                document.getElementById('screenshotPreview').src = ev.target.result;
+                document.getElementById('screenshotPreviewContainer').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        /* ===== QUICK SINGLE GPS REFRESH (for submit time) ===== */
+        function refreshGPSOnce() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) { resolve(); return; }
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        currentLat = pos.coords.latitude.toFixed(6);
+                        currentLng = pos.coords.longitude.toFixed(6);
+                        gpsAccuracy = Math.round(pos.coords.accuracy);
+                        document.getElementById('formLat').value = currentLat;
+                        document.getElementById('formLng').value = currentLng;
+                        document.getElementById('gpsAccuracy').textContent = `GPS: \u00B1${gpsAccuracy}m accuracy`;
+                        fetchReverseAddress(currentLat, currentLng);
+                        resolve();
+                    },
+                    () => resolve(),
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            });
+        }
+
+        /* ===== FORM SUBMIT ===== */
+        document.getElementById('dataForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            /* Validate ACCT ID */
+            const acctField = document.getElementById('acctId').value;
+            const acctErr = document.getElementById('acctError');
+            if (acctField.length !== 10 || isNaN(acctField)) {
+                acctErr.classList.remove('hidden');
+                acctErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            acctErr.classList.add('hidden');
+
+            /* Validate Date */
+            const monthVal = document.getElementById('mfMonth').value;
+            const yearVal = document.getElementById('mfYear').value;
+            const dateErr = document.getElementById('dateError');
+            if (!monthVal || !yearVal) {
+                dateErr.classList.remove('hidden');
+                dateErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            dateErr.classList.add('hidden');
+
+            /* Validate GPS */
+            if (!currentLat || !currentLng) {
+                alert('GPS Coordinates are not ready yet. Please ensure Location is ON and wait for GPS lock.');
+                return;
+            }
+
+            /* Validate Photo */
+            if (document.getElementById('previewContainer').classList.contains('hidden') || !originalCapturedImage) {
+                alert('Photo Capture is compulsory. Please snap a picture of the Meter.');
+                return;
+            }
+
+            /* Final submission flow */
+            showLoading('Finalizing GPS stamp & submitting data...');
+
+            /* Re-fetch GPS one last time */
+            await refreshGPSOnce();
+
+            /* Small delay for address to update if GPS changed */
+            await new Promise(r => setTimeout(r, 800));
+
+            /* Re-load map tiles with latest coordinates */
+            const freshTiles = await loadMapTiles(currentLat, currentLng);
+            if (freshTiles) mapTileCanvas = freshTiles;
+
+            /* Re-draw stamp with ALL final form values */
+            const canvas = document.getElementById('canvasPreview');
+            drawStampOnCanvas(canvas, originalCapturedImage, mapTileCanvas, {
+                village: addressData.village,
+                city: addressData.city,
+                district: addressData.district,
+                state: addressData.state,
+                lat: currentLat,
+                lng: currentLng,
+                division: document.getElementById('division').value,
+                acctId: acctField
+            });
+
+            const finalImageBase64 = canvas.toDataURL('image/jpeg', 0.6);
+            const meterMfDate = `${monthVal}/${yearVal}`;
+
+            const payload = {
+                userId: loginMobile,
+                userName: loginName,
+                division: document.getElementById('division').value,
+                acctId: acctField,
+                meterNumber: document.getElementById('meterNumber').value,
+                meterMake: document.getElementById('meterMake').value,
+                meterMfDate: meterMfDate,
+                latitude: currentLat,
+                longitude: currentLng,
+                remarks: document.getElementById('remarks').value,
+                otherRemarks: document.getElementById('otherRemarks').value,
+                photoBase64: finalImageBase64,
+                screenshotBase64: uploadedScreenshotBase64 || ""
+            };
+
+            const endpoint = "https://script.google.com/macros/s/AKfycbwTOhS5Sz4jQ7yuShHMGLTcQNGT3lfAHnNV6IywwJa0o5UT_CYBYVBHFJ25Pln6yYkZ/exec";
+
+            try {
+                await fetch(endpoint, {
+                    method: "POST",
+                    mode: "no-cors",
+                    cache: "no-cache",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+            } catch (err) {
+                console.log("Sync Log:", err);
+            }
+
+            /* Reset form state */
+            document.getElementById('dataForm').reset();
+            document.getElementById('previewContainer').classList.add('hidden');
+            document.getElementById('screenshotPreviewContainer').classList.add('hidden');
+            uploadedScreenshotBase64 = "";
+            originalCapturedImage = null;
+            mapTileCanvas = null;
+            document.getElementById('formLat').value = currentLat;
+            document.getElementById('formLng').value = currentLng;
+
+            hideLoading();
+            document.getElementById('successModal').classList.remove('hidden');
+        });
+
+        /* ===== UI HELPERS ===== */
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text || 'Processing...';
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+        function closePopupModal() {
+            document.getElementById('successModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
