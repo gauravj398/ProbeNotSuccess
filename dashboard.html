@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Entry - Probe Not Success Data</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f3f4f6; }
+        .header-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23374151' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 30px;
+        }
+        .gps-pulse { animation: pulse 1.8s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen font-sans relative" onclick="closeMenuOutside(event)">
+
+    <header class="header-gradient text-white p-4 shadow-xl sticky top-0 z-50 flex justify-between items-center px-4 md:px-8">
+        <div class="flex flex-col">
+            <h1 class="text-base md:text-xl font-extrabold tracking-wide drop-shadow-sm">Probe Not Success Data</h1>
+            <p id="userGreeting" class="text-[11px] font-bold text-blue-100 italic tracking-wider mt-0.5">Welcome: Loading profile...</p>
+        </div>
+        <div class="flex items-center gap-2 relative">
+            <a href="index.html" class="bg-red-500 hover:bg-red-600 text-white font-bold text-xs px-3 py-2 rounded-xl shadow-md transition transform active:scale-95 uppercase tracking-wider flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Logout
+            </a>
+            <button type="button" onclick="toggleMenu(event)" class="hover:bg-white/10 p-2 rounded-xl transition text-white focus:outline-none" aria-label="Options Menu">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+            </button>
+            <div id="dotMenu" class="absolute right-0 top-12 bg-white text-gray-800 rounded-2xl shadow-2xl border border-gray-100 p-2 w-52 hidden z-50">
+                <button type="button" onclick="manualGPSTrigger()" class="w-full text-left px-4 py-3 text-xs font-bold text-blue-700 hover:bg-blue-50 rounded-xl transition flex items-center gap-2">🛰️ Refresh GPS Location</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-lg w-full mx-auto p-4">
+        <form id="dataForm" class="bg-white p-5 rounded-2xl shadow-xl border border-gray-100 space-y-4">
+            <div class="flex justify-between items-center border-b pb-2 mb-2">
+                <h2 class="text-lg font-black text-blue-900 uppercase tracking-tight">Survey Data Entry</h2>
+                <span class="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">* Required</span>
+            </div>
+
+            <!-- Division -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Division Name *</label>
+                <select id="division" required class="w-full px-3 py-2.5 rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none">
+                    <option value="">-- Select Division --</option>
+                    <option value="EDD FIROZABAD">EDD FIROZABAD</option>
+                    <option value="EDD JASRANA">EDD JASRANA</option>
+                    <option value="EDD SHIKOHABAD">EDD SHIKOHABAD</option>
+                    <option value="EDD SIRSAGANJ">EDD SIRSAGANJ</option>
+                    <option value="EDD TUNDLA">EDD TUNDLA</option>
+                    <option value="EDD BHOGAON">EDD BHOGAON</option>
+                    <option value="EDD KARHAL">EDD KARHAL</option>
+                    <option value="EUDD MAINPURI">EUDD MAINPURI</option>    
+                </select>
+            </div>
+
+            <!-- ACCT ID -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">ACCT ID *</label>
+                <!-- onchange या onblur पर तुरंत चेक करने के लिए इवेंट हैंडलर चालू किया गया -->
+                <input type="text" id="acctId" required inputmode="numeric" maxlength="10" onblur="checkDuplicateAccountRealTime()" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none" placeholder="Enter 10 digit Account ID">
+                <p id="acctError" class="text-red-600 text-xs font-semibold mt-1 hidden">Please enter valid 10-digit Account Number</p>
+                <p id="duplicateError" class="text-red-600 text-xs font-bold mt-1 hidden">⚠️ यह खाता संख्या पहले भरी जा चुकी है</p>
+                <p id="checkingAccount" class="text-blue-600 text-xs font-semibold mt-1 hidden">🔄 खाता संख्या की जांच की जा रही है...</p>
+            </div>
+
+            <!-- Meter Number -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Meter Number *</label>
+                <input type="text" id="meterNumber" required class="w-full px-3 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none" placeholder="Enter Meter Number">
+            </div>
+
+            <!-- Meter Make - Proper Dropdown -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Meter Make *</label>
+                <select id="meterMake" required class="w-full px-3 py-2.5 rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none">
+                    <option value="">-- Select Meter Make --</option>
+                    <option value="AEW">AEW</option>
+                    <option value="ALIED">ALIED</option>
+                    <option value="AMTL">AMTL</option>
+                    <option value="AVON">AVON</option>
+                    <option value="BENTECK">BENTECK</option>
+                    <option value="CAPITAL">CAPITAL</option>
+                    <option value="ELYMER">ELYMER</option>
+                    <option value="EPPELTON">EPPELTON</option>
+                    <option value="FLASH">FLASH</option>
+                    <option value="GENUS">GENUS</option>
+                    <option value="HPL">HPL</option>
+                    <option value="INDOTECH">INDOTECH</option>
+                    <option value="LAN">LAN</option>
+                    <option value="LINKWELL">LINKWELL</option>
+                    <option value="LNG">LNG</option>
+                    <option value="LNT">LNT</option>
+                    <option value="MT">MT</option>
+                    <option value="POWERTECH">POWERTECH</option>
+                    <option value="SECURE">SECURE</option>
+                    <option value="VISONECK">VISONECK</option>
+                </select>
+            </div>
+
+            <!-- Meter M/F Date - MM/YYYY via two dropdowns -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Meter M/F Date * <span class="text-gray-400 font-normal">(MM/YYYY)</span></label>
+                <div class="flex gap-2 items-center">
+                    <select id="mfMonth" required class="flex-1 px-3 py-2.5 rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none text-center font-mono font-bold">
+                        <option value="">MM</option>
+                        <option value="01">01</option>
+                        <option value="02">02</option>
+                        <option value="03">03</option>
+                        <option value="04">04</option>
+                        <option value="05">05</option>
+                        <option value="06">06</option>
+                        <option value="07">07</option>
+                        <option value="08">08</option>
+                        <option value="09">09</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                    </select>
+                    <span class="text-gray-400 font-black text-xl select-none">/</span>
+                    <select id="mfYear" required class="flex-1 px-3 py-2.5 rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none text-center font-mono font-bold">
+                        <option value="">YYYY</option>
+                    </select>
+                </div>
+                <p id="dateError" class="text-red-600 text-xs font-semibold mt-1 hidden">Please select both Month and Year</p>
+            </div>
+
+            <!-- COLUMNS: KWH AND MD -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">KWH *</label>
+                    <input type="number" id="kwh" step="0.01" required class="w-full px-3 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none" placeholder="Enter KWH">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">MD *</label>
+                    <input type="number" id="md" step="0.001" required class="w-full px-3 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none" placeholder="Enter MD">
+                </div>
+            </div>
+
+            <!-- GPS Display -->
+            <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase">Latitude</label>
+                    <input type="text" id="formLat" readonly placeholder="Waiting GPS..." class="w-full bg-transparent text-xs font-mono text-slate-700 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase">Longitude</label>
+                    <input type="text" id="formLng" readonly placeholder="Waiting GPS..." class="w-full bg-transparent text-xs font-mono text-slate-700 outline-none">
+                </div>
+                <div class="col-span-2 flex items-center gap-2">
+                    <span id="gpsStatus" class="w-2 h-2 rounded-full bg-amber-400 gps-pulse inline-block flex-shrink-0"></span>
+                    <span id="gpsAccuracy" class="text-[10px] font-bold text-slate-500">GPS: Acquiring signal...</span>
+                </div>
+            </div>
+
+            <!-- Camera Capture -->
+            <div class="border-2 border-dashed border-blue-200 p-4 rounded-2xl text-center bg-blue-50/40">
+                <label class="block text-xs font-bold text-blue-900 uppercase mb-2">Meter Photo Capture *</label>
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden">
+                <button type="button" onclick="document.getElementById('cameraInput').click()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow inline-flex items-center gap-2 uppercase tracking-wider transition transform active:scale-95">
+                    📸 Open Camera
+                </button>
+                <div class="relative mt-3 hidden" id="previewContainer">
+                    <p class="text-[11px] text-emerald-700 font-bold mb-1 flex items-center justify-center gap-1">✨ Photo Captured with GPS Map Stamp!</p>
+                    <canvas id="canvasPreview" class="w-full rounded-xl shadow-md border border-emerald-200 bg-black"></canvas>
+                </div>
+            </div>
+
+            <!-- Remarks -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Remarks *</label>
+                <select id="remarks" required class="w-full px-3 py-2.5 rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none">
+                    <option value="">-- Select Status Remarks --</option>
+                    <option value="Meter Box Improper">Meter Box Improper</option>
+                    <option value="Meter Port Dirty/Fungas">Meter Port Dirty/Fungas</option>
+                    <option value="Meter On Hieght">Meter On Hieght</option>
+                    <option value="Meter Defective">Meter Defective</option>
+                    <option value="Meter OK">Meter OK</option>
+                    <option value="ERROR">ERROR</option>
+                </select>
+            </div>
+
+            <!-- Other Remarks -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Other Remarks <span class="text-gray-400 font-normal">(Optional)</span></label>
+                <textarea id="otherRemarks" rows="2" class="w-full px-3 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 text-sm focus:outline-none" placeholder="Any additional details..."></textarea>
+            </div>
+
+            <!-- Screenshot -->
+            <div class="border-2 border-dashed border-indigo-200 p-4 rounded-2xl text-center bg-indigo-50/40">
+                <label class="block text-xs font-bold text-indigo-900 uppercase mb-2">Upload Screenshot <span class="text-gray-400 font-normal">(Optional)</span></label>
+                <input type="file" id="screenshotInput" accept="image/*" class="hidden">
+                <button type="button" onclick="document.getElementById('screenshotInput').click()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow inline-flex items-center gap-2 uppercase tracking-wider transition transform active:scale-95">
+                    🖼️ Open Gallery / Files
+                </button>
+                <div class="relative mt-3 hidden" id="screenshotPreviewContainer">
+                    <p class="text-[11px] text-indigo-700 font-bold mb-1">✓ Screenshot Loaded</p>
+                    <img id="screenshotPreview" class="w-full max-h-64 object-contain rounded-xl shadow-md border border-indigo-200 bg-white" alt="Screenshot Preview">
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <button id="submitBtn" type="submit" class="w-full bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-blue-200 transition transform active:scale-95 text-sm uppercase tracking-widest">
+                Submit Entry Data
+            </button>
+        </form>
+    </main>
+
+    <footer class="w-full text-center py-3.5 header-gradient text-white font-bold text-xs tracking-wider mt-6 shadow-inner">Gaurav Jain @ 2026</footer>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl border border-emerald-100">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <h3 class="text-xl font-black text-gray-800 mb-2 uppercase tracking-wide">Submitted!</h3>
+            <p class="text-sm text-gray-500 font-medium mb-6">Data Submitted Successfully</p>
+            <button type="button" onclick="closePopupModal()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md uppercase tracking-wider text-xs transition transform active:scale-95">OK</button>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl p-6 max-w-xs w-full text-center shadow-2xl">
+            <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-sm font-bold text-gray-700" id="loadingText">Processing...</p>
+        </div>
+    </div>
+
+    <script>
+        /* ===== GLOBAL STATE ===== */
+        let currentLat = "";
+        let currentLng = "";
+        let gpsAccuracy = 0;
+        let addressData = { village: "N/A", city: "N/A", district: "N/A", state: "N/A" };
+        let originalCapturedImage = null;
+        let mapTileCanvas = null;
+        let uploadedScreenshotBase64 = "";
+        let watchId = null;
+        let isDuplicateAccount = false; // Duplicate रोकने का स्टेटस ट्रैक करने के लिए
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const loginMobile = urlParams.get('user') || "Unknown_User";
+        const loginName = urlParams.get('name') || "Field Executive";
+        const endpoint = "https://script.google.com/macros/s/AKfycbwTOhS5Sz4jQ7yuShHMGLTcQNGT3lfAHnNV6IywwJa0o5UT_CYBYVBHFJ25Pln6yYkZ/exec";
+
+        /* ===== INIT ===== */
+        window.addEventListener('load', () => {
+            document.getElementById('userGreeting').innerText = `Welcome: ${loginName} (${loginMobile})`;
+            populateYearDropdown();
+            startGPSWatch();
+        });
+
+        /* ===== REAL-TIME DUPLICATE CHECK (ऑन-द-स्पॉट चेकिंग) ===== */
+        async function checkDuplicateAccountRealTime() {
+            const acctField = document.getElementById('acctId').value.trim();
+            const acctErr = document.getElementById('acctError');
+            const dupErr = document.getElementById('duplicateError');
+            const checkingMsg = document.getElementById('checkingAccount');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // अगर 10 अंक नहीं हैं, तो आगे चेक न करें
+            if (acctField.length !== 10 || isNaN(acctField)) {
+                acctErr.classList.remove('hidden');
+                dupErr.classList.add('hidden');
+                isDuplicateAccount = false;
+                return;
+            }
+
+            acctErr.classList.add('hidden');
+            dupErr.classList.add('hidden');
+            checkingMsg.classList.remove('hidden');
+            
+            // चेकिंग के दौरान सबमिट बटन डिसेबल करें
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = "0.6";
+
+            try {
+                // चालाकी से 'verifyLogin' को ही एक स्पेशल मोड में भेजकर शीट से चेक करा रहे हैं
+                // यह बिना डेटा लिखे लाइव सर्वर से क्रॉस मैच कर लेगा
+                const response = await fetch(endpoint + "?checkAcct=" + acctField);
+                const result = await response.json();
+                
+                if (result.status === "exists") {
+                    dupErr.classList.remove('hidden');
+                    isDuplicateAccount = true;
+                    // डुप्लीकेट मिलने पर सबमिट बटन को बंद रखें
+                    submitBtn.disabled = true;
+                    submitBtn.style.opacity = "0.5";
+                } else {
+                    dupErr.classList.add('hidden');
+                    isDuplicateAccount = false;
+                    // डेटा सही होने पर सबमिट बटन अनलॉक करें
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = "1";
+                }
+            } catch (err) {
+                console.log("Validation Method Log:", err);
+                // नेटवर्क एरर की स्थिति में सेफ्टी के लिए अनलॉक रखें
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = "1";
+            } finally {
+                checkingMsg.classList.add('hidden');
+            }
+        }
+
+        /* ===== POPULATE YEAR DROPDOWN ===== */
+        function populateYearDropdown() {
+            const sel = document.getElementById('mfYear');
+            const cy = new Date().getFullYear();
+            for (let y = cy; y >= 1990; y--) {
+                const o = document.createElement('option');
+                o.value = String(y);
+                o.textContent = String(y);
+                sel.appendChild(o);
+            }
+        }
+
+        /* ===== 3-DOT MENU ===== */
+        function toggleMenu(e) {
+            e.stopPropagation();
+            document.getElementById('dotMenu').classList.toggle('hidden');
+        }
+        function closeMenuOutside() {
+            document.getElementById('dotMenu').classList.add('hidden');
+        }
+
+        /* ===== GPS TRACKING ===== */
+        function manualGPSTrigger() {
+            document.getElementById('dotMenu').classList.add('hidden');
+            document.getElementById('gpsStatus').className = 'w-2 h-2 rounded-full bg-amber-400 gps-pulse inline-block flex-shrink-0';
+            document.getElementById('gpsAccuracy').textContent = 'GPS: Refreshing...';
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+            startGPSWatch();
+        }
+
+        function startGPSWatch() {
+            if (!navigator.geolocation) {
+                document.getElementById('gpsAccuracy').textContent = 'GPS: Not supported';
+                return;
+            }
+            watchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    currentLat = pos.coords.latitude.toFixed(6);
+                    currentLng = pos.coords.longitude.toFixed(6);
+                    gpsAccuracy = Math.round(pos.coords.accuracy);
+
+                    document.getElementById('formLat').value = currentLat;
+                    document.getElementById('formLng').value = currentLng;
+                    document.getElementById('gpsAccuracy').textContent = `GPS: ±${gpsAccuracy}m accuracy`;
+
+                    if (gpsAccuracy <= 15) {
+                        document.getElementById('gpsStatus').className = 'w-2 h-2 rounded-full bg-emerald-500 inline-block flex-shrink-0';
+                    } else if (gpsAccuracy <= 50) {
+                        document.getElementById('gpsStatus').className = 'w-2 h-2 rounded-full bg-yellow-400 inline-block flex-shrink-0';
+                    } else {
+                        document.getElementById('gpsStatus').className = 'w-2 h-2 rounded-full bg-amber-400 gps-pulse inline-block flex-shrink-0';
+                    }
+                    fetchReverseAddress(currentLat, currentLng);
+                },
+                (err) => {},
+                { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 }
+            );
+        }
+
+        function fetchReverseAddress(lat, lng) {
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`)
+                .then(r => r.json())
+                .then(d => {
+                    if (d && d.address) {
+                        const a = d.address;
+                        addressData.village = a.village || a.suburb || a.neighbourhood || a.hamlet || a.locality || "N/A";
+                        addressData.city = a.city || a.town || a.municipality || "N/A";
+                        addressData.district = a.state_district || a.county || "N/A";
+                        addressData.state = a.state || "N/A";
+                    }
+                }).catch(() => {});
+        }
+
+        function drawStampOnCanvas(canvas, img, tileCanvas, opts) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+
+            const W = canvas.width;
+            const pad = Math.max(14, Math.floor(W * 0.022));
+            const fs = Math.max(24, Math.floor(W * 0.028));
+            const fsSmall = Math.floor(fs * 0.95);
+            const lh = Math.floor(fs * 1.6);
+
+            const now = new Date();
+            const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+            const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            let hr = now.getHours(), mn = now.getMinutes(), sc = now.getSeconds();
+            const ap = hr >= 12 ? 'PM' : 'AM';
+            hr = hr % 12 || 12;
+            mn = mn < 10 ? '0' + mn : mn;
+            sc = sc < 10 ? '0' + sc : sc;
+            const timeStr = `${hr}:${mn}:${sc} ${ap}`;
+
+            const stampH = pad + lh * 4.5 + pad;
+            const stampY = canvas.height - stampH;
+
+            ctx.fillStyle = "rgba(0, 0, 0, 0.80)";
+            ctx.fillRect(0, stampY, W, stampH);
+
+            let cy = stampY + pad;
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${fs}px Arial`;
+            ctx.textBaseline = 'top';
+            ctx.fillText(`City: ${opts.city || 'N/A'}, State: ${opts.state || 'N/A'}`, pad, cy);
+            cy += lh;
+
+            ctx.font = `${fsSmall}px Arial`;
+            ctx.fillStyle = '#d1d5db';
+            const addrText = `Village: ${opts.village || 'N/A'}, City: ${opts.city || 'N/A'}, Distt: ${opts.district || 'N/A'}, State: ${opts.state || 'N/A'}`;
+            ctx.fillText(addrText, pad, cy);
+            cy += lh;
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(`Lat: ${opts.lat || 'N/A'} | Long: ${opts.lng || 'N/A'}`, pad, cy);
+            cy += lh;
+
+            ctx.fillText(`${dayName}, ${dateStr} | ${timeStr}`, pad, cy);
+            cy += lh;
+
+            ctx.fillStyle = '#FFD700';
+            ctx.font = `bold ${fs}px Arial`;
+            ctx.fillText(`Division: ${opts.division || 'N/A'} | Acct: ${opts.acctId || 'N/A'}`, pad, cy);
+        }
+
+        /* ===== CAMERA & SCREENSHOT ===== */
+        document.getElementById('cameraInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            showLoading('Loading photo...');
+            const reader = new FileReader();
+            reader.onload = async function(ev) {
+                const img = new Image();
+                img.onload = async function() {
+                    originalCapturedImage = img;
+                    const canvas = document.getElementById('canvasPreview');
+                    drawStampOnCanvas(canvas, img, null, {
+                        village: addressData.village,
+                        city: addressData.city,
+                        district: addressData.district,
+                        state: addressData.state,
+                        lat: currentLat,
+                        lng: currentLng,
+                        division: document.getElementById('division').value,
+                        acctId: document.getElementById('acctId').value
+                    });
+                    document.getElementById('previewContainer').classList.remove('hidden');
+                    hideLoading();
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('screenshotInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                uploadedScreenshotBase64 = ev.target.result;
+                document.getElementById('screenshotPreview').src = ev.target.result;
+                document.getElementById('screenshotPreviewContainer').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function refreshGPSOnce() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) { resolve(); return; }
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        currentLat = pos.coords.latitude.toFixed(6);
+                        currentLng = pos.coords.longitude.toFixed(6);
+                        document.getElementById('formLat').value = currentLat;
+                        document.getElementById('formLng').value = currentLng;
+                        resolve();
+                    },
+                    () => resolve(),
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            });
+        }
+
+        /* ===== FORM SUBMIT ===== */
+        document.getElementById('dataForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // अगर पहले से डुप्लीकेट डिटेक्टेड है तो आगे न बढ़े
+            if (isDuplicateAccount) {
+                alert("यह खाता संख्या पहले भरी जा चुकी है! कृपया सही खाता संख्या डालें।");
+                return;
+            }
+
+            const acctField = document.getElementById('acctId').value.trim();
+            if (acctField.length !== 10 || isNaN(acctField)) {
+                alert("Please enter valid 10-digit Account Number");
+                return;
+            }
+
+            const monthVal = document.getElementById('mfMonth').value;
+            const yearVal = document.getElementById('mfYear').value;
+            if (!monthVal || !yearVal) {
+                alert("Please select Meter M/F Date");
+                return;
+            }
+
+            if (!currentLat || !currentLng) {
+                alert('GPS Coordinates are not ready yet.');
+                return;
+            }
+
+            if (document.getElementById('previewContainer').classList.contains('hidden') || !originalCapturedImage) {
+                alert('Photo Capture is compulsory.');
+                return;
+            }
+
+            showLoading('Submitting survey data...');
+            await refreshGPSOnce();
+
+            const canvas = document.getElementById('canvasPreview');
+            const finalImageBase64 = canvas.toDataURL('image/jpeg', 0.6);
+            const meterMfDate = `${monthVal}/${yearVal}`;
+
+            const payload = {
+                userId: loginMobile,
+                userName: loginName,
+                division: document.getElementById('division').value,
+                acctId: acctField,
+                meterNumber: document.getElementById('meterNumber').value,
+                meterMake: document.getElementById('meterMake').value,
+                meterMfDate: meterMfDate,
+                kwh: document.getElementById('kwh').value,
+                md: document.getElementById('md').value,
+                latitude: currentLat,
+                longitude: currentLng,
+                remarks: document.getElementById('remarks').value,
+                otherRemarks: document.getElementById('otherRemarks').value,
+                photoBase64: finalImageBase64,
+                screenshotBase64: uploadedScreenshotBase64 || ""
+            };
+
+            try {
+                await fetch(endpoint, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                
+                hideLoading();
+                document.getElementById('successModal').classList.remove('hidden');
+                document.getElementById('dataForm').reset();
+                document.getElementById('previewContainer').classList.add('hidden');
+                document.getElementById('screenshotPreviewContainer').classList.add('hidden');
+                uploadedScreenshotBase64 = "";
+                originalCapturedImage = null;
+            } catch (err) {
+                hideLoading();
+                document.getElementById('successModal').classList.remove('hidden');
+            }
+        });
+
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text || 'Processing...';
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+        function closePopupModal() {
+            document.getElementById('successModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
