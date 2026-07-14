@@ -2,12 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
     <title>Data Entry - Probe Not Success Data</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #f3f4f6; }
-        .header-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
+        /* ===== NATIVE APP LAYOUT LOCK ===== */
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;           /* Page khud kabhi scroll nahi hoga */
+            position: fixed;            /* WebView bounce/rubber-band lock */
+            inset: 0;
+            overscroll-behavior: none;  /* Pull-to-refresh / bounce disable */
+            background-color: #f3f4f6;
+            touch-action: manipulation;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        /* Header & Footer - flex me fixed blocks (kabhi nahi hilenge) */
+        #appHeader, #appFooter {
+            flex-shrink: 0;
+        }
+        /* Sirf ye area scroll hoga - native smooth scrolling */
+        #scrollArea {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;  /* Native momentum scroll */
+            overscroll-behavior-y: contain;     /* Scroll chain break */
+        }
         select {
             appearance: none;
             -webkit-appearance: none;
@@ -16,14 +43,15 @@
             background-position: right 10px center;
             padding-right: 30px;
         }
+        .header-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
         .gps-pulse { animation: pulse 1.8s infinite; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
     </style>
 </head>
-<body class="h-screen w-screen overflow-hidden flex flex-col font-sans relative" onclick="closeMenuOutside(event)">
+<body class="font-sans" onclick="closeMenuOutside(event)">
 
-    <!-- Fixed Header (Never moves) -->
-    <header class="header-gradient text-white p-4 shadow-xl fixed top-0 left-0 right-0 h-16 z-50 flex justify-between items-center px-4 md:px-8">
+    <!-- ===== FIXED HEADER (Flex Block - Never Moves) ===== -->
+    <header id="appHeader" class="header-gradient text-white shadow-xl h-16 z-50 flex justify-between items-center px-4 md:px-8">
         <div class="flex flex-col">
             <h1 class="text-base md:text-xl font-extrabold tracking-wide drop-shadow-sm">Probe Not Success Data</h1>
             <p id="userGreeting" class="text-[11px] font-bold text-blue-100 italic tracking-wider mt-0.5">Welcome: Loading profile...</p>
@@ -42,8 +70,9 @@
         </div>
     </header>
 
-    <!-- Native App Scrollable Main Content Frame -->
-    <main class="flex-grow w-full max-w-lg mx-auto overflow-y-auto px-4 pt-20 pb-20">
+    <!-- ===== SCROLLABLE MIDDLE AREA (Only this part scrolls) ===== -->
+    <main id="scrollArea">
+        <div class="w-full max-w-lg mx-auto px-4 py-4">
         <form id="dataForm" class="bg-white p-5 rounded-2xl shadow-xl border border-gray-100 space-y-4">
             <div class="flex justify-between items-center border-b pb-2 mb-2">
                 <h2 class="text-lg font-black text-blue-900 uppercase tracking-tight">Survey Data Entry</h2>
@@ -215,10 +244,11 @@
                 Submit Entry Data
             </button>
         </form>
+        </div>
     </main>
 
-    <!-- Fixed Footer (Never moves, larger button layout structure) -->
-    <footer class="w-full header-gradient text-white font-bold text-xs tracking-wider shadow-2xl fixed bottom-0 left-0 right-0 h-16 z-50 flex justify-between items-center px-6">
+    <!-- ===== FIXED FOOTER (Flex Block - Never Moves) ===== -->
+    <footer id="appFooter" class="w-full header-gradient text-white font-bold text-xs tracking-wider shadow-2xl h-16 z-50 flex justify-between items-center px-6">
         <div class="flex-1 text-left md:text-center pl-2">Gaurav Jain @ 2026 v1.2</div>
         <button type="button" onclick="openDashboardModal()" class="bg-amber-500 hover:bg-amber-600 text-white font-black text-xs px-5 py-2.5 rounded-xl shadow-md transition transform active:scale-95 uppercase tracking-wider flex items-center gap-1.5 border border-amber-400/30">
             <span>📊</span> Report
@@ -226,7 +256,7 @@
     </footer>
 
     <!-- Success Modal -->
-    <div id="successModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div id="successModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl border border-emerald-100">
             <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
@@ -237,24 +267,21 @@
         </div>
     </div>
 
-    <!-- 1. Custom Duplicate Warning Modal (Popup) -->
-    <div id="duplicateModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <!-- Duplicate Warning Modal -->
+    <div id="duplicateModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-xl p-5 max-w-sm w-full shadow-2xl border border-red-100 font-sans">
             <div class="flex items-start gap-4">
-                <!-- Red Alert Triangle Icon -->
                 <div class="bg-red-100 text-red-500 p-2.5 rounded-full flex-shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                     </svg>
                 </div>
-                <!-- Warning Text Block -->
                 <div class="flex-grow pt-0.5">
                     <h4 class="text-base font-bold text-gray-900 leading-tight mb-2">Duplicate Entry / डुप्लिकेट प्रविष्टि</h4>
                     <p class="text-sm text-gray-700 font-medium leading-relaxed mb-1">यह खाता संख्या पहले से ही दर्ज की जा चुकी है।</p>
                     <p class="text-xs text-gray-500 font-medium leading-normal">This Account ID Already Exists.</p>
                 </div>
             </div>
-            <!-- Action Button -->
             <div class="flex justify-end mt-4">
                 <button type="button" onclick="closeDuplicateModal()" class="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-5 py-2 rounded shadow-md transition transform active:scale-95 uppercase tracking-wide">
                     OK / ठीक है
@@ -263,10 +290,9 @@
         </div>
     </div>
 
-    <!-- Live Dashboard Modal (Popup) -->
-    <div id="dashboardModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <!-- Live Dashboard Modal -->
+    <div id="dashboardModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-blue-100">
-            <!-- Header Interface Segment -->
             <div class="bg-sky-500 text-white p-4">
                 <div class="flex justify-between items-center mb-3">
                     <div class="flex bg-sky-600/50 p-0.5 rounded-lg text-[11px] font-bold">
@@ -277,8 +303,6 @@
                         DAY: <span id="dashCurrentDate">Loading...</span>
                     </div>
                 </div>
-                
-                <!-- 4-Column Table Header Element -->
                 <div class="grid grid-cols-4 text-left text-[11px] font-black tracking-wide border-t border-sky-400/30 pt-2.5 mt-2 gap-1">
                     <div class="flex items-center gap-0.5">👤 Agent Id</div>
                     <div class="flex items-center gap-0.5">👤 Name</div>
@@ -286,17 +310,13 @@
                     <div class="flex items-center gap-0.5 justify-end">🔢 Total Bills ↑</div>
                 </div>
             </div>
-            
-            <!-- Dashboard Scrollable Body -->
             <div class="p-3 max-h-60 overflow-y-auto space-y-2 bg-slate-50 font-mono text-[11px] text-gray-800">
-                <!-- Data Row 1: Today's Data -->
                 <div class="grid grid-cols-4 bg-white p-2.5 rounded-xl shadow-sm border border-gray-100 items-center gap-1">
                     <div id="dashAgentId1" class="font-bold text-gray-600 truncate">Loading...</div>
                     <div id="dashName1" class="font-bold text-gray-700 truncate">Loading...</div>
                     <div class="font-semibold text-blue-600">Today Data</div>
                     <div id="todayCountDisplay" class="font-black text-blue-600 text-right text-xs">0</div>
                 </div>
-                <!-- Data Row 2: Total Data -->
                 <div class="grid grid-cols-4 bg-white p-2.5 rounded-xl shadow-sm border border-gray-100 items-center gap-1">
                     <div id="dashAgentId2" class="font-bold text-gray-600 truncate">Loading...</div>
                     <div id="dashName2" class="font-bold text-gray-700 truncate">Loading...</div>
@@ -304,8 +324,6 @@
                     <div id="totalCountDisplay" class="font-black text-emerald-600 text-right text-xs">0</div>
                 </div>
             </div>
-
-            <!-- Footer Action Group -->
             <div class="p-3 bg-gray-100 border-t border-gray-200 flex justify-end">
                 <button type="button" onclick="closeDashboardModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition transform active:scale-95 uppercase tracking-wide shadow-md">
                     Close Report
@@ -325,7 +343,6 @@
         let watchId = null;
         let isDuplicateAccount = false; 
 
-        // Local Count state backup variables
         let todayCount = 0;
         let totalCount = 0;
 
@@ -333,7 +350,6 @@
         const loginMobile = urlParams.get('user') || "Unknown_User";
         const loginName = urlParams.get('name') || "Field Executive";
         
-        // 🌟 APNA CORRECT URL LINK YAHAN DALEIN 🌟
         const endpoint = "https://script.google.com/macros/s/AKfycbwTOhS5Sz4jQ7yuShHMGLTcQNGT3lfAHnNV6IywwJa0o5UT_CYBYVBHFJ25Pln6yYkZ/exec";
 
         /* ===== INIT ===== */
@@ -345,13 +361,20 @@
             fetchDashboardData();
         });
 
+        /* ===== KEYBOARD FIX: Input focus par scroll into view (WebView) ===== */
+        document.addEventListener('focusin', (e) => {
+            if (e.target.matches('input, select, textarea')) {
+                setTimeout(() => {
+                    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            }
+        });
+
         /* ===== DASHBOARD CARD LOGIC ===== */
         function setDashboardStaticDetails() {
             const now = new Date();
             const formattedDate = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase().replace(/ /g, '-');
             document.getElementById('dashCurrentDate').innerText = formattedDate;
-            
-            // Map credentials correctly to columns
             document.getElementById('dashAgentId1').innerText = loginMobile;
             document.getElementById('dashAgentId2').innerText = loginMobile;
             document.getElementById('dashName1').innerText = loginName;
@@ -389,7 +412,7 @@
             document.getElementById('dashboardModal').classList.add('hidden');
         }
 
-        /* ===== 1. MODAL DUPLICATE LOGIC INSTEAD OF TEXT INLINE ===== */
+        /* ===== DUPLICATE CHECK LOGIC ===== */
         async function checkDuplicateAccountRealTime() {
             const acctField = document.getElementById('acctId').value.trim();
             const acctErr = document.getElementById('acctError');
@@ -419,7 +442,6 @@
                     isDuplicateAccount = true;
                     submitBtn.disabled = true;
                     submitBtn.style.opacity = "0.5";
-                    // Display Warning Pop-up instantly
                     document.getElementById('duplicateModal').classList.remove('hidden');
                 } else {
                     isDuplicateAccount = false;
@@ -437,7 +459,7 @@
 
         function closeDuplicateModal() {
             document.getElementById('duplicateModal').classList.add('hidden');
-            document.getElementById('acctId').value = ""; // Clear input box on validation fail
+            document.getElementById('acctId').value = "";
             document.getElementById('submitBtn').disabled = false;
             document.getElementById('submitBtn').style.opacity = "1";
         }
@@ -624,7 +646,7 @@
             });
         }
 
-        /* ===== FORM INSTANT SUBMIT & BACKGROUND UPLOAD ===== */
+        /* ===== FORM SUBMIT ===== */
         document.getElementById('dataForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -681,7 +703,6 @@
                 screenshotBase64: uploadedScreenshotBase64 || ""
             };
 
-            // ⚡ INSTANT SUCCESS UI RESPONSE LOGIC
             todayCount++;
             totalCount++;
             updateDashboardUI();
@@ -695,7 +716,9 @@
             uploadedScreenshotBase64 = "";
             originalCapturedImage = null;
 
-            // 🔄 TRIGGER EXECUTIONS SAFELY IN THE BACKGROUND
+            // Scroll form ko top par le jao next entry ke liye
+            document.getElementById('scrollArea').scrollTo({ top: 0, behavior: 'smooth' });
+
             fetch(endpoint, {
                 method: "POST",
                 body: JSON.stringify(payload)
